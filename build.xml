@@ -1,0 +1,21 @@
+<project>
+
+	<property name="src" value="src"/>
+	<property name="lib" value="lib"/>
+	<property name="map" value="map"/>
+	<property name="deploy" value="deploy"/>
+	
+    <target name="clean">
+        <delete dir="${deploy}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${deploy}"/>
+		<copy todir="${deploy}">
+			<fileset dir="${src}" includes="**"/>
+			<fileset dir="${lib}" includes="**"/>
+			<fileset dir="${map}" includes="**"/>
+		</copy>
+    </target>
+	
+</project>
