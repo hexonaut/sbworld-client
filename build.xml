@@ -11,8 +11,16 @@
 
     <target name="compile">
         <mkdir dir="${deploy}"/>
+		<java jar="C:/Program Files (x86)/Google/Closure Compiler/compiler.jar" fork="true">
+			<arg value="--js=${src}/player.js"/>
+			<arg value="--js=${src}/world.js"/>
+			<arg value="--js=${src}/main.js"/>
+			<arg value="--formatting"/>
+			<arg value="PRETTY_PRINT"/>
+			<arg value="--js_output_file=${deploy}/game.js"/>
+		</java>
 		<copy todir="${deploy}">
-			<fileset dir="${src}" includes="**"/>
+			<fileset dir="${src}" excludes="*.js"/>
 			<fileset dir="${lib}" includes="**"/>
 			<fileset dir="${map}" includes="**"/>
 		</copy>
