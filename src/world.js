@@ -6,10 +6,16 @@ World = function (tilesAtlas, mapData) {
 	var tw = Number(map.attr("tilewidth"));
 	var th = Number(map.attr("tileheight"));
 	var w = Number(map.attr("width"));
+	var h = Number(map.attr("height"));
 	var tilesetData = map.find("tileset");
 	var imageData = tilesetData.find("img");
 	var iw = Number(imageData.attr("width"));
 	var scope = this;
+	
+	this.tw = tw;
+	this.th = th;
+	this.width = w*tw;
+	this.height = h*th;
 	
 	//Tileset data
 	this.tilesData = [];
@@ -26,6 +32,7 @@ World = function (tilesAtlas, mapData) {
 	//Read tile data
 	map.find("layer, objectgroup").each(function (i, l) {
 		var layer = new PIXI.DisplayObjectContainer();
+		layer.tiles = [];
 		if (l.tagName.toLowerCase() == "layer") {
 			//Tile Layer
 			var layerData = window.atob($(l).find("data").first().text().trim());
@@ -37,11 +44,12 @@ World = function (tilesAtlas, mapData) {
 					tile.position.y = Math.floor((o >> 2) / w) * th;
 					tile.tileid = tileid;
 					layer.addChild(tile);
+					layer.tiles[o >> 2] = tile;
 				}
 			}
 		} else {
 			//Player layer
-			this.playerLayer = layer;
+			scope.playerLayer = layer;
 		}
 		scope.addChild(layer);
 	});
@@ -52,8 +60,10 @@ World.prototype = Object.create(PIXI.DisplayObjectContainer.prototype);
 
 World.prototype.addPlayer = function (player) {
 	this.playerLayer.addChild(player);
+	player.world = this;
 };
 
 World.prototype.removePlayer = function (player) {
 	this.playerLayer.removeChild(player);
+	player.world = null;
 };

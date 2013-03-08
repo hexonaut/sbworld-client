@@ -6,20 +6,18 @@ Player = function (textures, id, name, male) {
 	this.targetX = -1;
 	this.targetY = -1;
 	this.anchor.x = 0.5;
-	this.anchor.y = 0.5;
-	/*var state = 0;	//0 = standing, 1 = running
-	var frame = 0;
-	var direction = 0;
-	var speed = 3;
-	var frameDur = 100;
-	var currFrameDur = 0;
-	var scope = this;
-	var graphic = new chesterGL.Block([0, 0, 128, 128]);
-	var nameGraphic = chesterGL.settings.webglMode ? new chesterGL.LabelBlock(name, "14pt sans-serif") : null;
-	if (nameGraphic != null) {
-		nameGraphic.setPosition([0, 25, 0]);
-		graphic.addChild(nameGraphic);
-	}*/
+	this.anchor.y = 0.77;
+	this.world = null;
+	this.running = false;
+	this.direction = 0;
+	this.angle = 0;
+	this.speed = 3;
+	this.animationSpeed = 0.1666;
+	this.play();
+	
+	//Setup name text
+	this.nameDom = $(document.createElement("span")).css("position", "absolute").css("font-size", "18px").css("font-family", "'Lucida Sans Unicode', 'Lucida Grande', sans-serif").text(name);
+	$("body").append(this.nameDom);
 };
 
 Player.constructor = Player;
@@ -42,14 +40,19 @@ Player.prototype.move = function (x, y, ignoreIndividualDimensions) {
 };
 
 Player.prototype.checkBodyCollision = function (x, y) {
-	return this.checkCollision(x - 13, y - 8) || this.checkCollision(x - 13, y + 23) || this.checkCollision(x + 13, y - 8) || this.checkCollision(x + 13, y + 23);
+	return this.checkCollision(x - 13, y + 8) || this.checkCollision(x - 13, y - 23) || this.checkCollision(x + 13, y + 8) || this.checkCollision(x + 13, y - 23);
 };
 
 Player.prototype.checkCollision = function (x, y) {
-	for (var i in chesterGL.TMXBlock.maps["map.tmx"]["layers"]) {
-		var blocks = chesterGL.TMXBlock.maps["map.tmx"]["layers"][i].hashBlocks;
-		var index = Math.floor((1280 - y) / 32)*50 + Math.floor(x / 32);
-		if (blocks[index] != null && blocks[index].props != null && blocks[index].props.c == "1") return true;
+	for (var i in this.world.children) {
+		var blocks = this.world.children[i].tiles;
+		var index = Math.floor(y / this.world.th)*(this.world.width/this.world.tw) + Math.floor(x / this.world.tw);
+		if (blocks[index] != null) {
+			var tileid = blocks[index].tileid;
+			if (this.world.tilesData[tileid] != null) {
+				return this.world.tilesData[tileid].c == "1";
+			}
+		}
 	}
 	return false;
 };
@@ -62,37 +65,27 @@ Player.prototype.walkTo = function (x, y) {
 Player.prototype.run = function (delta) {
 	//Move player towards target if necessary
 	var speedMult = delta / (1000/60);	//Target is 60 FPS so multiply speed by this
-	if (scope.targetX != -1 && scope.targetY != -1 && (scope.x != scope.targetX || scope.y != scope.targetY)) {
-		var dx = scope.targetX - scope.x;
-		var dy = scope.targetY - scope.y;
-		scope.angle = Math.atan2(dy, dx);
-		direction = Math.round(scope.angle / 0.78539816339744830961566084581988 + 3) % 8;	//45 degrees
-		if (direction < 0) direction += 8;
-		state = 1;
+	if (this.targetX != -1 && this.targetY != -1 && (this.position.x != this.targetX || this.position.y != this.targetY)) {
+		var dx = this.targetX - this.position.x;
+		var dy = this.targetY - this.position.y;
+		this.angle = Math.atan2(dy, dx);
+		this.direction = Math.round(this.angle / 0.78539816339744830961566084581988 + 4) % 8;	//45 degrees
+		this.running = true;
 		
-		if (Math.sqrt(dx*dx + dy*dy) > speed*speedMult) {
-			scope.move(scope.x + Math.cos(scope.angle)*speed*speedMult, scope.y + Math.sin(scope.angle)*speed*speedMult, false);
+		if (Math.sqrt(dx*dx + dy*dy) > this.speed*speedMult) {
+			this.move(this.position.x + Math.cos(this.angle)*this.speed*speedMult, this.position.y + Math.sin(this.angle)*this.speed*speedMult, false);
 		} else {
-			scope.move(scope.targetX, scope.targetY, false);
+			this.move(this.targetX, this.targetY, false);
 		}
-	} else if (state == 1) {
-		state = 0;
-		frame = 0;
+	} else if (this.running) {
+		this.running = false;
 	}
 	
-	//Do animation
-	graphic.setPosition([scope.x, scope.y + 35, 0]);
-	currFrameDur += delta;
-	while (currFrameDur >= frameDur) {
-		var actualFrame = state == 1 ? frame + 4 : frame;
-		graphic.setFrame([actualFrame*128, direction*128, 128, 128]);
-		frame++;
-		if (state == 1) {
-			if (frame >= 8) frame = 0;
-		} else {
-			if (frame >= 4) frame = 0;
-		}
-		
-		currFrameDur -= frameDur;
+	//Update frame if we have reached a barrier
+	if (this.currentFrame + 1 < this.direction*12 + (this.running ? 4 : 0) || this.currentFrame + 1 >= this.direction*12 + (this.running ? 12 : 4)) {
+		this.currentFrame = this.direction*12 + (this.running ? 4 : 0);
 	}
+	
+	//Reposition the dom names
+	this.nameDom.css("left", (this.position.x + this.world.position.x - this.nameDom.width()/2) + "px").css("top", (this.position.y + this.world.position.y - 80) + "px")
 };
