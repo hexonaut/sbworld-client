@@ -151,6 +151,9 @@ function assetsLoaded (mapData) {
 		spawnPlayer(0, "Multiplayer Not Available", Math.random() >= 0.5, true);
 	}
 	
+	//Get rid of jquery-mobile garbage
+	$("div").remove();
+	
 	//Start render loop
 	resize();
 	lastTime = new Date().getTime();
@@ -231,9 +234,6 @@ function run () {
 }
 
 $(function () {
-	//Get rid of jquery-mobile garbage
-	$("div").remove();
-	
 	//Load the map data
 	mapRequest = new AjaxRequest();
 	mapRequest.onreadystatechange = function () {
