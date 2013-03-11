@@ -158,10 +158,12 @@ function assetsLoaded (mapData) {
 }
 
 function resize () {
-	screenWidth = $(window).width();
-	screenHeight = $(window).height();
-
-	renderer.resize(screenWidth, screenHeight);
+	if (screenWidth != $(window).width() || screenHeight != $(window).height()) {
+		screenWidth = $(window).width();
+		screenHeight = $(window).height();
+	
+		renderer.resize(screenWidth, screenHeight);
+	}
 }
 
 function run () {
